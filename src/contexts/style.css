@@ -1,0 +1,28 @@
+#__PARTICLE_CONNECTKIT__ img:first-of-type {
+  min-height: 130px;
+}
+
+#__PARTICLE_CONNECTKIT__ button,
+#__PARTICLE_CONNECTKIT__ input {
+  border: none;
+}
+
+#__PARTICLE_CONNECTKIT__ .bQpemO {
+  opacity: 1;
+}
+
+#__PARTICLE_CONNECTKIT__ img[alt="MetaMask"] {
+  min-height: 10px;
+}
+
+#__PARTICLE_CONNECTKIT__ img[alt="Essentials"] {
+  min-height: 10px;
+}
+
+#__PARTICLE_CONNECTKIT__ img[alt="WalletConnect"] {
+  min-height: 10px;
+}
+
+#__PARTICLE_CONNECTKIT__ div:has(> div:contains("afeno")) {
+  background-color: red; /* Highlights the parent */
+}
