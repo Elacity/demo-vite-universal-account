@@ -1,28 +1,30 @@
 /* eslint-disable react-refresh/only-export-components */
 /* eslint-disable @typescript-eslint/no-empty-object-type */
-import React from 'react';
+import React from "react";
 import {
-  ConnectKitProvider, createConfig, type ConnectKitOptions,
-} from '@particle-network/connectkit';
-import { authWalletConnectors } from '@particle-network/connectkit/auth';
-import { evmWalletConnectors } from '@particle-network/connectkit/evm';
+  ConnectKitProvider,
+  createConfig,
+  type ConnectKitOptions,
+} from "@particle-network/connectkit";
+import { authWalletConnectors } from "@particle-network/connectkit/auth";
+import { evmWalletConnectors } from "@particle-network/connectkit/evm";
+
+import "./style.css";
 
 // Import base chain directly to avoid wildcard export issues
 const base = {
   id: 8453,
-  name: 'Base',
-  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  name: "Base",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://mainnet.base.org'] },
-    public: { http: ['https://mainnet.base.org'] },
+    default: { http: ["https://mainnet.base.org"] },
+    public: { http: ["https://mainnet.base.org"] },
   },
   blockExplorers: {
-    default: { name: 'BaseScan', url: 'https://basescan.org' },
+    default: { name: "BaseScan", url: "https://basescan.org" },
   },
   testnet: false,
 };
-
-import './style.css';
 
 /**
  * Context interface for Particle Network ConnectKit configuration
@@ -34,7 +36,7 @@ interface ParticleConnectkitContextProps {
 /**
  * Props interface for the ParticleConnectkit component
  */
-interface ParticleConnectkitProps { }
+interface ParticleConnectkitProps {}
 
 // Configure supported chains
 // @todo: MERGE <These mainnet entries are included here for testing purposes only.
@@ -42,9 +44,7 @@ interface ParticleConnectkitProps { }
 // set by Particle Network in the wallet, as direct addition in the code does not work.
 // Please, DO NOT MERGE THIS BRANCH without carefully considering the implications,
 // as it may disrupt the current flow>.
-const chains: ConnectKitOptions['chains'] = [
-  base,
-];
+const chains: ConnectKitOptions["chains"] = [base];
 
 /**
  * Creates the configuration for Particle Network ConnectKit
@@ -64,17 +64,17 @@ const config = createConfig({
     collapseWalletList: false,
     hideContinueButton: true,
     // Order of connection methods
-    connectorsOrder: ['email', 'phone', 'social'],
+    connectorsOrder: ["email", "phone", "social"],
     // logo: '/static/elacity/waving.png',
-    language: 'en-US',
+    language: "en-US",
     // Theme customization using Material UI colors
     theme: {
-      '--pcm-font-family': '-apple-system,"Proxima Nova",Arial,sans-serif',
-      '--pcm-rounded-sm': '4px',
-      '--pcm-rounded-md': '8px',
-      '--pcm-rounded-lg': '11px',
-      '--pcm-rounded-xl': '22px',
-      '--pcm-body-action-color': 'var(--pcm-body-color)',
+      "--pcm-font-family": '-apple-system,"Proxima Nova",Arial,sans-serif',
+      "--pcm-rounded-sm": "4px",
+      "--pcm-rounded-md": "8px",
+      "--pcm-rounded-lg": "11px",
+      "--pcm-rounded-xl": "22px",
+      "--pcm-body-action-color": "var(--pcm-body-color)",
     },
   },
 
@@ -82,14 +82,14 @@ const config = createConfig({
   walletConnectors: [
     // Authentication wallet connectors configuration
     authWalletConnectors({
-      fiatCoin: 'USD',
+      fiatCoin: "USD",
       promptSettingConfig: {
         promptMasterPasswordSettingWhenLogin: 1,
         promptPaymentPasswordSettingWhenSign: 1,
       },
     }),
     evmWalletConnectors({
-      metadata: { name: 'Elacity' },
+      metadata: { name: "Elacity" },
       multiInjectedProviderDiscovery: true,
     }),
   ],
@@ -99,23 +99,28 @@ const config = createConfig({
 /**
  * Context for sharing Particle Network ConnectKit configuration
  */
-export const ParticleConnectkitContext = React.createContext<ParticleConnectkitContextProps>({
-  config,
-});
+export const ParticleConnectkitContext =
+  React.createContext<ParticleConnectkitContextProps>({
+    config,
+  });
 
 /**
  * ParticleConnectkit Component
  * Provides ConnectKit configuration and context to its children
  * @param children - Child components that will have access to ConnectKit functionality
  */
-export const ParticleConnectkit = ({ children }: React.PropsWithChildren<ParticleConnectkitProps>) => {
+export const ParticleConnectkit = ({
+  children,
+}: React.PropsWithChildren<ParticleConnectkitProps>) => {
   return (
     <ParticleConnectkitContext.Provider
       value={{
         config,
       }}
     >
-      <ConnectKitProvider config={config} reconnectOnMount>{children}</ConnectKitProvider>
+      <ConnectKitProvider config={config} reconnectOnMount>
+        {children}
+      </ConnectKitProvider>
     </ParticleConnectkitContext.Provider>
   );
 };
@@ -124,7 +129,8 @@ export const ParticleConnectkit = ({ children }: React.PropsWithChildren<Particl
  * Hook to access the Particle Network ConnectKit configuration
  * @returns ConnectKit configuration context
  */
-export const useConnectkitConfig = () => React.useContext(ParticleConnectkitContext);
+export const useConnectkitConfig = () =>
+  React.useContext(ParticleConnectkitContext);
 
 // Export memoized component to prevent unnecessary re-renders
 export default React.memo(ParticleConnectkit);

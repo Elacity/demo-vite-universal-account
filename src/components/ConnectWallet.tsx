@@ -6,7 +6,9 @@ const ConnectWallet = () => {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Universal Accounts Demo</h1>
-        <p className={styles.subtitle}>Particle ConnectKit + Universal Accounts</p>
+        <p className={styles.subtitle}>
+          Particle ConnectKit + Universal Accounts
+        </p>
       </div>
 
       <div className={styles.connectCard}>

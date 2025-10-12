@@ -1,7 +1,7 @@
 import { useAccount } from "@particle-network/connectkit";
 import { useParticleNetwork } from "../hooks";
 import { useState } from "react";
-import { Interface, /* parseEther, toBeHex */ } from "ethers";
+import * as ethers from "ethers";
 import ConnectWallet from "./ConnectWallet";
 import styles from "./styles/mint.module.css";
 // import { SUPPORTED_TOKEN_TYPE } from "@particle-network/universal-account-sdk";
@@ -13,7 +13,7 @@ const MintComponent = () => {
     smartAccountInfo,
     primaryAssets,
     deactivate,
-    signMessage
+    signMessage,
   } = useParticleNetwork();
 
   // Transaction state - stores the URL of the latest transaction
@@ -84,7 +84,9 @@ const MintComponent = () => {
   const handleMintTransaction = async () => {
     // Safety check - all these are required for transactions
     if (!universalAccount || !isConnected) {
-      setError("Transaction prerequisites not met. Please ensure wallet is connected.");
+      setError(
+        "Transaction prerequisites not met. Please ensure wallet is connected.",
+      );
       return;
     }
 
@@ -95,7 +97,9 @@ const MintComponent = () => {
 
     try {
       const contractAddress = "0xc2d8a086f730036eb5578d890307f01133b0e22d";
-      const interf = new Interface(["function mint(string _uri, uint16 opType, bytes opRawData, bytes sellRawData)"]);
+      const interf = new ethers.utils.Interface([
+        "function mint(string _uri, uint16 opType, bytes opRawData, bytes sellRawData)",
+      ]);
 
       const transaction = await universalAccount.createUniversalTransaction({
         chainId: 8453, // Base mainnet
@@ -103,38 +107,39 @@ const MintComponent = () => {
         transactions: [
           {
             to: contractAddress,
-            data: interf.encodeFunctionData(
-              "mint(string,uint16,bytes,bytes)",
-              [
-                'QmcrYwRqKhvVGChTf1V8F4Ji3LjXmR5zABcnreGJ3gidQB/metadata.json',
-                0,
-                '0x',
-                '0x',
-              ]),
+            data: interf.encodeFunctionData("mint(string,uint16,bytes,bytes)", [
+              "QmcrYwRqKhvVGChTf1V8F4Ji3LjXmR5zABcnreGJ3gidQB/metadata.json",
+              0,
+              "0x",
+              "0x",
+            ]),
             value: "0x0",
           },
         ],
       });
-      
-      const signature = await signMessage(transaction.rootHash);
-      const sendResult = await universalAccount.sendTransaction(transaction, signature);
 
-      console.log('TXID', sendResult.transactionId);
+      const signature = await signMessage(transaction.rootHash);
+      const sendResult = await universalAccount.sendTransaction(
+        transaction,
+        signature,
+      );
+
+      console.log("TXID", sendResult.transactionId);
       setTransactionUrl(sendResult.transactionId);
     } catch (error: unknown) {
       console.error("Transaction failed:", error);
-      
+
       // Extract meaningful error message
       let errorMessage = "Transaction failed. Please try again.";
-      
-      if (error && typeof error === 'object' && 'message' in error) {
+
+      if (error && typeof error === "object" && "message" in error) {
         errorMessage = (error as Error).message;
-      } else if (error && typeof error === 'object' && 'reason' in error) {
+      } else if (error && typeof error === "object" && "reason" in error) {
         errorMessage = (error as { reason: string }).reason;
-      } else if (typeof error === 'string') {
+      } else if (typeof error === "string") {
         errorMessage = error;
       }
-      
+
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -179,10 +184,7 @@ const MintComponent = () => {
                 <h2>Owner Address (EOA)</h2>
                 <p className={styles.address}>{address}</p>
               </div>
-              <button
-                onClick={deactivate}
-                className={styles.disconnectButton}
-              >
+              <button onClick={deactivate} className={styles.disconnectButton}>
                 Disconnect
               </button>
             </div>
@@ -195,17 +197,20 @@ const MintComponent = () => {
 
                 {/* Universal Account Addresses */}
                 <div className={styles.infoSection}>
-                  <h3 className={styles.sectionTitle}>Universal Account Addresses</h3>
+                  <h3 className={styles.sectionTitle}>
+                    Universal Account Addresses
+                  </h3>
                   <div className={styles.addressSection}>
                     <p className={styles.accountLabel}>EVM</p>
                     <p className={styles.accountAddress}>
-                      {smartAccountInfo?.smartAccountAddress || 'Loading...'}
+                      {smartAccountInfo?.smartAccountAddress || "Loading..."}
                     </p>
                   </div>
                   <div className={styles.addressSection}>
                     <p className={styles.accountLabel}>Solana</p>
                     <p className={styles.accountAddress}>
-                      {smartAccountInfo?.solanaSmartAccountAddress || 'Loading...'}
+                      {smartAccountInfo?.solanaSmartAccountAddress ||
+                        "Loading..."}
                     </p>
                   </div>
                 </div>
@@ -238,12 +243,13 @@ const MintComponent = () => {
                   >
                     Send Custom Transaction
                   </button>
-                </div>*/ }
+                </div>*/}
 
                 <div className={styles.actionCard}>
                   <h3 className={styles.actionTitle}>Custom Contract Call</h3>
                   <p className={styles.actionDescription}>
-                    Mint a free asset on custom deployed contract on Base Mainnet
+                    Mint a free asset on custom deployed contract on Base
+                    Mainnet
                   </p>
                   <button
                     onClick={handleMintTransaction}
@@ -274,9 +280,7 @@ const MintComponent = () => {
             {error && (
               <div className={styles.errorCard}>
                 <p className={styles.errorLabel}>Error</p>
-                <div className={styles.errorMessage}>
-                  {error}
-                </div>
+                <div className={styles.errorMessage}>{error}</div>
               </div>
             )}
 
@@ -284,9 +288,7 @@ const MintComponent = () => {
             {transactionUrl && (
               <div className={styles.transactionCard}>
                 <p className={styles.transactionLabel}>Latest Transaction</p>
-                <div className={styles.transactionLink}>
-                  {transactionUrl}
-                </div>
+                <div className={styles.transactionLink}>{transactionUrl}</div>
               </div>
             )}
           </>

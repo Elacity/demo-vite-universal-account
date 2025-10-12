@@ -1,20 +1,23 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 /* eslint-disable react-refresh/only-export-components */
-import React from 'react';
-import { type Connector } from '@particle-network/connector-core';
+import React from "react";
+import { type Connector } from "@particle-network/connector-core";
 import {
   type IAssetsResponse,
   type ISmartAccountOptions,
   UniversalAccount,
-} from '@particle-network/universal-account-sdk';
+} from "@particle-network/universal-account-sdk";
 import {
   useAccount,
   useDisconnect,
   useWallets,
-} from '@particle-network/connectkit';
-import type { EVMProvider } from '@particle-network/connectkit/auth';
+} from "@particle-network/connectkit";
+import type { EVMProvider } from "@particle-network/connectkit/auth";
 
-export type SmartAccountInfo = Pick<ISmartAccountOptions, 'ownerAddress' | 'smartAccountAddress' | 'solanaSmartAccountAddress'>;
+export type SmartAccountInfo = Pick<
+  ISmartAccountOptions,
+  "ownerAddress" | "smartAccountAddress" | "solanaSmartAccountAddress"
+>;
 
 interface ConnectorContextValue {
   account?: string;
@@ -28,16 +31,17 @@ interface ConnectorContextValue {
   signMessage: (rootHash: string) => Promise<string>;
 }
 
-export const ParticleNetworkContext = React.createContext<ConnectorContextValue>({
-  deactivate: () => { },
-  signMessage: () => Promise.resolve(""),
-});
+export const ParticleNetworkContext =
+  React.createContext<ConnectorContextValue>({
+    deactivate: () => {},
+    signMessage: () => Promise.resolve(""),
+  });
 
-interface ParticleNetworkContextProps { }
+interface ParticleNetworkContextProps {}
 
-const ParticleNetworkProvider: React.FC<React.PropsWithChildren<ParticleNetworkContextProps>> = React.memo(({
-  children,
-}) => {
+const ParticleNetworkProvider: React.FC<
+  React.PropsWithChildren<ParticleNetworkContextProps>
+> = React.memo(({ children }) => {
   const {
     address: eoaAddress, // EOA address
     chainId,
@@ -47,17 +51,19 @@ const ParticleNetworkProvider: React.FC<React.PropsWithChildren<ParticleNetworkC
   const { disconnect } = useDisconnect();
 
   // Universal Account instance states
-  const [universalAccount, setUniversalAccount] = React.useState<UniversalAccount>();
+  const [universalAccount, setUniversalAccount] =
+    React.useState<UniversalAccount>();
 
   // Aggregated balance across all chains
   const [primaryAssets, setPrimaryAssets] = React.useState<IAssetsResponse>();
 
   // Smart account addresses for different chains
-  const [smartAccountInfo, setSmartAccountInfo] = React.useState<SmartAccountInfo>({
-    ownerAddress: '',
-    smartAccountAddress: '', // EVM-based chains (Ethereum, Base, etc)
-    solanaSmartAccountAddress: '', // Solana chain
-  });
+  const [smartAccountInfo, setSmartAccountInfo] =
+    React.useState<SmartAccountInfo>({
+      ownerAddress: "",
+      smartAccountAddress: "", // EVM-based chains (Ethereum, Base, etc)
+      solanaSmartAccountAddress: "", // Solana chain
+    });
 
   const deactivate = () => {
     disconnect({ connector });
@@ -68,12 +74,13 @@ const ParticleNetworkProvider: React.FC<React.PropsWithChildren<ParticleNetworkC
     if (eoaAddress) {
       // Create new UA instance when user connects
       const ua = new UniversalAccount({
-        projectId: import.meta.env.VITE_PARTICLE_PROJECT_ID || '' as string,
-        projectClientKey: import.meta.env.VITE_PARTICLE_CLIENT_KEY || '' as string,
-        projectAppUuid: import.meta.env.VITE_PARTICLE_APP_ID || '' as string,
+        projectId: import.meta.env.VITE_PARTICLE_PROJECT_ID || ("" as string),
+        projectClientKey:
+          import.meta.env.VITE_PARTICLE_CLIENT_KEY || ("" as string),
+        projectAppUuid: import.meta.env.VITE_PARTICLE_APP_ID || ("" as string),
         ownerAddress: eoaAddress,
       });
-      console.log('UniversalAccount initialized:', ua);
+      console.log("UniversalAccount initialized:", ua);
       setUniversalAccount(ua);
     }
   }, [eoaAddress]);
@@ -84,11 +91,12 @@ const ParticleNetworkProvider: React.FC<React.PropsWithChildren<ParticleNetworkC
 
     const fetchSmartAccountAddresses = async () => {
       // Get smart account addresses for both EVM and Solana
-      const { smartAccountAddress, solanaSmartAccountAddress } = await universalAccount.getSmartAccountOptions();
+      const { smartAccountAddress, solanaSmartAccountAddress } =
+        await universalAccount.getSmartAccountOptions();
       setSmartAccountInfo({
         ownerAddress: eoaAddress, // EOA address
-        smartAccountAddress: smartAccountAddress || '', // EVM smart account
-        solanaSmartAccountAddress: solanaSmartAccountAddress || '', // Solana smart account
+        smartAccountAddress: smartAccountAddress || "", // EVM smart account
+        solanaSmartAccountAddress: solanaSmartAccountAddress || "", // Solana smart account
       });
     };
 
@@ -109,32 +117,35 @@ const ParticleNetworkProvider: React.FC<React.PropsWithChildren<ParticleNetworkC
     fetchPrimaryAssets();
   }, [universalAccount, eoaAddress]);
 
-  const signMessage = React.useCallback(async (rootHash: string) => {
-    if (primaryWallet.connector.type !== "particleAuth") {
-      const walletClient = primaryWallet?.getWalletClient();
-      return walletClient?.signMessage({
-        account: eoaAddress as `0x${string}`,
-        message: { raw: rootHash as `0x${string}` },
-      });
-    }
+  const signMessage = React.useCallback(
+    async (rootHash: string) => {
+      if (primaryWallet.connector.type !== "particleAuth") {
+        const walletClient = primaryWallet?.getWalletClient();
+        return walletClient?.signMessage({
+          account: eoaAddress as `0x${string}`,
+          message: { raw: rootHash as `0x${string}` },
+        });
+      }
 
-    const provider = await primaryWallet.connector.getProvider();
-    return (provider as EVMProvider).signMessage(rootHash);
-  }, [primaryWallet, eoaAddress]);
+      const provider = await primaryWallet.connector.getProvider();
+      return (provider as EVMProvider).signMessage(rootHash);
+    },
+    [primaryWallet, eoaAddress],
+  );
 
   return (
     <ParticleNetworkContext.Provider
       value={{
-        ...({
+        ...{
           chainId,
           account: eoaAddress,
           connector,
           universalAccount, // ua sdk instance
           primaryAssets,
           smartAccountInfo, // ua info
-        }),
+        },
         deactivate,
-        signMessage
+        signMessage,
       }}
     >
       {children}
@@ -142,6 +153,6 @@ const ParticleNetworkProvider: React.FC<React.PropsWithChildren<ParticleNetworkC
   );
 });
 
-ParticleNetworkProvider.displayName = 'ParticleNetworkProviderInner';
+ParticleNetworkProvider.displayName = "ParticleNetworkProviderInner";
 
 export default ParticleNetworkProvider;
