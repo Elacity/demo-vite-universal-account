@@ -2,7 +2,6 @@ import * as ethers from "ethers";
 import { type Connector } from "@particle-network/connector-core";
 import type { LitNodeClient } from "@lit-protocol/lit-node-client";
 import { LIT_ABILITY } from "@lit-protocol/constants";
-import type { AuthMethod } from "@lit-protocol/types";
 import {
   createSiweMessageWithRecaps,
   generateAuthSig,
@@ -12,7 +11,6 @@ import {
 } from "@lit-protocol/auth-helpers";
 import type { PKPEntity, SessionParams } from "./types";
 import { capacityDelegationAuthSig } from "./constants";
-import { initializePKPForAccount } from "./pkp";
 
 export const createWeb3SessionSigs = async (
   client: LitNodeClient,
@@ -94,11 +92,29 @@ export const createWeb3SessionSigs = async (
 export const createSessionSigsFromPKP = async (
   client: LitNodeClient,
   pkp: PKPEntity,
-  opts?: SessionParams,
+  opts?: SessionParams & {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    jsParams?: Record<string, any>;
+    litActionCode?: string;
+    litActionIpfsId?: string;
+  },
 ) => {
+  const { jsParams, litActionCode, litActionIpfsId } = opts || {};
   const sessionSigs = await client.getPkpSessionSigs({
     pkpPublicKey: pkp.pkpPublicKey,
     authMethods: opts?.authMethods,
+    ...(jsParams && {
+      jsParams,
+    }),
+    ...(litActionCode && {
+      litActionCode,
+    }),
+    ...(litActionIpfsId && {
+      litActionIpfsId,
+    }),
+    jsParams,
+    litActionCode,
+    litActionIpfsId,
     resourceAbilityRequests: [
       {
         resource: new LitAccessControlConditionResource("*"),
@@ -121,16 +137,11 @@ export const createSessionSigsFromPKP = async (
 
 export const createSessionSigsFromLitAction = async (
   client: LitNodeClient,
+  pkp: PKPEntity,
   litActionCode: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   opts?: SessionParams & { jsParams?: Record<string, any> },
 ) => {
-  const pkp = await initializePKPForAccount(
-    client,
-    opts?.account as string,
-    opts?.authMethods?.[0] as AuthMethod,
-  );
-
   const sessionSigs = await client.getLitActionSessionSigs({
     litActionCode: litActionCode,
     jsParams: opts?.jsParams || {},

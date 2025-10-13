@@ -119,7 +119,6 @@ const LitComponent: React.FC = () => {
     isDecrypting,
     output,
     createSession,
-    executeAction,
     decryptCEK,
   } = useLitAction();
 
@@ -130,7 +129,7 @@ const LitComponent: React.FC = () => {
     //ciphertext: 'odd1VexEnNYKTHuf0MTfTCKxLjkmBuusUYc+aF1CZDNkpoMqtkMt2JioZmqbcB6q7l2j8oH/1+IwSGKk4RnqULq6rpUT55lrAyIst00ni/og6/ET5FYRTFwkwOLjQgbO3i1KQ/UVJumdMQh3RK/ek6U',
     //hash: '863d3167a1903bf8f2d4e6ca52584a896c79dfddf36397b20ad8bcba5480feab',
     ciphertext:
-      "rzL42PVVjn9zM5v6s4S2mRKduXpZ/y7ynzl6L0Od0itd00koduyR2ZZDu0Jz4zh0lPLW2oEul8irBAcwGJ9HSW8PGQl3Gh9hZCVTuXuJ1zAgRwt+gemQcTuH4kjuReINkVm3235LQ3Sl+eoTQUpWUioC",
+      "jMbBwx/1StSwXCpuCa3FXHpEIAdKDCPp9GCqp6PW/AcWAcs/G4CtkqOaLYS4obPm4JxDjrNj/Ffsgg6C8y4Vu/HKS4remyo8U6QXg1D8w50gg59Hl4pjMzmKXhGSgmVK/Dk5D/pOsYAn19NzfOkWK0UC",
     hash: "e2a3023912c008588fef13acce1276e50eaf68b5e0aec2025d2cee7cf8db1672",
   });
 
@@ -263,36 +262,7 @@ const LitComponent: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => {
-                executeAction?.(
-                  `(async () => {
-                        console.log("Lit.Auth", Lit.Auth);
-                                              
-                        // 1. Decrypt the CEK using Lit's access control
-                        const cek = await Lit.Actions.decryptAndCombine({
-                          accessControlConditions: [
-                            {
-                              conditionType: "evmBasic",
-                              contractAddress: "ipfs://QmWCdA2DeqdBSoUJbTLJiuaobKD9PYqExKkVRFJetzxW5E",
-                              standardContractType: "LitAction",
-                              chain: chain,
-                              method: "hasAccessByContentId",
-                              parameters: [":userAddress", kid, authority, rpc],
-                              returnValueTest: { comparator: "=", value: "true" }
-                            },
-                          ],
-                          ciphertext: ciphertext,
-                          dataToEncryptHash: dataToEncryptHash,
-                          chain: chain,
-                        });
-
-                        Lit.Actions.setResponse({
-                          response: JSON.stringify({ cek, publicKey, saAddress, address: userAddress, ...Lit.Auth.authMethodContexts }),
-                        });
-                      })()`,
-                  payload,
-                );
-              }}
+              onClick={handleDecrypt}
               disabled={!currentSession || isDecrypting}
               style={{ ...styles.button, ...styles.buttonSecondary }}
             >

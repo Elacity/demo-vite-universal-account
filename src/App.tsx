@@ -10,7 +10,7 @@ function App() {
       <div>
         <ConnectorProvider>
           <MintComponent />
-          <LitActionProvider network={import.meta.env.VITE_LIT_NETWORK || "datil"}>
+          <LitActionProvider network={import.meta.env.VITE_LIT_NETWORK}>
             <LitComponent />
           </LitActionProvider>
         </ConnectorProvider>

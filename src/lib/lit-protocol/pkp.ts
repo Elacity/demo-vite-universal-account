@@ -17,7 +17,6 @@ import type {
 import type { PKPEntity } from "./types";
 import getRelayer from "./relayer";
 import { LitActionResource } from "@lit-protocol/auth-helpers";
-import { getPkpInfoFromMintReceipt } from "./utils";
 
 // see this doc, about how private keys are derived to be used for PKPs
 // https://github.com/WebOfTrustInfo/rwot1-sf/blob/master/topics-and-advance-readings/hierarchical-deterministic-keys--bip32-and-beyond.md
@@ -119,6 +118,7 @@ export const initializePKPForSmartAccount = async (
   const litContracts = new LitContracts({
     signer: owner,
     network: client.config.litNetwork,
+    debug: true,
   });
   await litContracts.connect();
 
@@ -126,7 +126,9 @@ export const initializePKPForSmartAccount = async (
   const authMethodType = ethers.utils.keccak256(
     ethers.utils.toUtf8Bytes("@particle-network/universal-account"),
   );
-  const authMethodId = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(`sa:${account}`));
+  const authMethodId = ethers.utils.keccak256(
+    ethers.utils.toUtf8Bytes(`sa:${account}`),
+  );
   console.log("✅ Generated Auth Method type and ID", {
     authMethodId,
     authMethodType,
@@ -136,29 +138,38 @@ export const initializePKPForSmartAccount = async (
   // const pkpMintCost = await litContracts.pkpNftContract.read.mintCost();
   // console.log("✅ Got PKP mint cost", pkpMintCost);
 
-  const tx =
-    await litContracts.pkpHelperContract.write.mintNextAndAddAuthMethods(
-      AUTH_METHOD_TYPE.LitAction, // keyType
-      [AUTH_METHOD_TYPE.LitAction, authMethodType], // permittedAuthMethodTypes
-      [
-        `0x${Buffer.from(bs58.decode("QmenYGBaQtqgw9TyszT1coDzn6nkLT4mA6ATUoWr4g25So")).toString("hex")}`,
-        authMethodId,
-      ], // permittedAuthMethodIds
-      ["0x", "0x"], // permittedAuthMethodPubkeys
-      [[AUTH_METHOD_SCOPE.SignAnything], [AUTH_METHOD_SCOPE.NoPermissions]], // permittedAuthMethodScopes
-      true, // addPkpEthAddressAsPermittedAddress
-      true, // sendPkpToItself
-      //{ value: pkpMintCost },
-    );
-  const receipt = await tx.wait();
-  console.log(`✅ Minted new PKP`, receipt);
+  const relay = getRelayer(client);
+  const mintPayload = {
+    keyType: AUTH_METHOD_TYPE.LitAction,
+    permittedAuthMethodTypes: [AUTH_METHOD_TYPE.LitAction, authMethodType],
+    permittedAuthMethodIds: [
+      `0x${Buffer.from(bs58.decode("QmenYGBaQtqgw9TyszT1coDzn6nkLT4mA6ATUoWr4g25So")).toString("hex")}`,
+      authMethodId,
+    ],
+    permittedAuthMethodPubkeys: ["0x", account], // permittedAuthMethodPubkeys,
+    permittedAuthMethodScopes: [
+      [AUTH_METHOD_SCOPE.SignAnything],
+      [AUTH_METHOD_SCOPE.SignAnything],
+    ], // permittedAuthMethodScopes,
+    addPkpEthAddressAsPermittedAddress: true,
+    sendPkpToItself: true,
+  };
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  pkp = await getPkpInfoFromMintReceipt(receipt, litContracts);
-  localStorage.setItem(PKP_STORAGE_KEY, JSON.stringify(pkp));
+  const m = await relay.mintPKP(JSON.stringify(mintPayload));
+  const { pkpTokenId, pkpEthAddress, pkpPublicKey } =
+    await relay.pollRequestUntilTerminalState(m.requestId!);
+  console.log(`✅ Minted new PKP`, pkpTokenId);
 
-  return pkp!;
+  localStorage.setItem(
+    PKP_STORAGE_KEY,
+    JSON.stringify({ pkpTokenId, pkpEthAddress, pkpPublicKey }),
+  );
+
+  return {
+    pkpTokenId: pkpTokenId!,
+    pkpEthAddress: pkpEthAddress!,
+    pkpPublicKey: pkpPublicKey!,
+  };
 };
 
 /**
